@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Incidents Database</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #1a237e 0%, #283593 100%);
+            color: white;
+            padding: 25px 30px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 8px;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.85;
+            font-weight: 300;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #eaeaea;
+        }
+        
+        .stats {
+            font-size: 0.95rem;
+            color: #555;
+        }
+        
+        .search-filter {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .search-filter input, .search-filter select {
+            padding: 8px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .search-filter input:focus, .search-filter select:focus {
+            outline: none;
+            border-color: #3949ab;
+            box-shadow: 0 0 0 2px rgba(57, 73, 171, 0.1);
+        }
+        
+        .table-container {
+            position: relative;
+            max-height: 600px;
+            overflow-y: auto;
+            border-bottom: 1px solid #eaeaea;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 1200px;
+        }
+        
+        thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        th {
+            background-color: #3949ab;
+            color: white;
+            font-weight: 600;
+            text-align: left;
+            padding: 16px 12px;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        th:last-child {
+            border-right: none;
+        }
+        
+        td {
+            padding: 14px 12px;
+            border-bottom: 1px solid #eaeaea;
+            font-size: 0.9rem;
+            vertical-align: top;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        tr:hover {
+            background-color: #f0f4ff;
+            transition: background-color 0.2s ease;
+        }
+        
+        .region-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-align: center;
+            min-width: 70px;
+        }
+        
+        .region-usa { background-color: #e8f5e9; color: #2e7d32; }
+        .region-europe { background-color: #e3f2fd; color: #1565c0; }
+        .region-asia { background-color: #fff3e0; color: #ef6c00; }
+        .region-middle-east { background-color: #fce4ec; color: #c2185b; }
+        .region-other { background-color: #f5f5f5; color: #616161; }
+        
+        .industry-tag {
+            display: inline-block;
+            padding: 3px 8px;
+            background-color: #e8eaf6;
+            color: #3949ab;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin: 2px;
+        }
+        
+        .summary-text {
+            max-height: 60px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+        }
+        
+        .more-link {
+            color: #3949ab;
+            text-decoration: none;
+            font-size: 0.85rem;
+            display: inline-block;
+            margin-top: 5px;
+        }
+        
+        .more-link:hover {
+            text-decoration: underline;
+        }
+        
+        .consequences {
+            font-size: 0.85rem;
+            color: #d32f2f;
+            font-weight: 500;
+        }
+        
+        .footer {
+            padding: 20px 30px;
+            background-color: #f8f9fa;
+            color: #666;
+            font-size: 0.9rem;
+            text-align: center;
+            border-top: 1px solid #eaeaea;
+        }
+        
+        .loading {
+            padding: 30px;
+            text-align: center;
+            color: #666;
+            font-style: italic;
+        }
+        
+        .no-results {
+            padding: 30px;
+            text-align: center;
+            color: #666;
+            font-size: 1.1rem;
+            display: none;
+        }
+        
+        /* Стили для скроллбара */
+        .table-container::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        .table-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        .table-container::-webkit-scrollbar-thumb {
+            background: #b0b0b0;
+            border-radius: 4px;
+        }
+        
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: #888;
+        }
+        
+        .error-message {
+            padding: 30px;
+            text-align: center;
+            color: #d32f2f;
+            font-size: 1.1rem;
+            display: none;
+        }
+        
+        @media (max-width: 1200px) {
+            .table-container {
+                overflow-x: auto;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .search-filter {
+                width: 100%;
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Cyber Incidents Database</h1>
+            <p class="subtitle">Operational Technology & Industrial Control Systems Security Incidents</p>
+        </header>
+        
+        <div class="controls">
+            <div class="stats">
+                <span id="incident-count">0</span> incidents in database
+            </div>
+            <div class="search-filter">
+                <input type="text" id="search-input" placeholder="Search incidents...">
+                <select id="region-filter">
+                    <option value="">All Regions</option>
+                    <option value="USA">USA</option>
+                    <option value="Canada">Canada</option>
+                    <option value="Germany">Germany</option>
+                    <option value="UK">UK</option>
+                    <option value="Japan">Japan</option>
+                    <option value="France">France</option>
+                    <option value="Sweden">Sweden</option>
+                    <option value="Italy">Italy</option>
+                    <option value="Russia">Russia</option>
+                    <option value="Ukraine">Ukraine</option>
+                    <option value="Australia">Australia</option>
+                </select>
+                <select id="industry-filter">
+                    <option value="">All Industries</option>
+                    <option value="Transport">Transport</option>
+                    <option value="Discrete Mfg.">Discrete Manufacturing</option>
+                    <option value="Process Mfg.">Process Manufacturing</option>
+                    <option value="Power">Power</option>
+                    <option value="Water">Water</option>
+                    <option value="Food & Bev.">Food & Beverage</option>
+                    <option value="Pharma">Pharmaceutical</option>
+                    <option value="Oil & Gas">Oil & Gas</option>
+                    <option value="Metals & Mining">Metals & Mining</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="table-container">
+            <table id="incidents-table">
+                <thead>
+                    <tr>
+                        <th width="100">Date</th>
+                        <th width="180">Victim</th>
+                        <th width="100">Region</th>
+                        <th width="120">Industry</th>
+                        <th width="150">Threat Actor</th>
+                        <th width="150">OT Attack Type</th>
+                        <th width="200">Physical Consequences</th>
+                        <th>Incident Summary</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body">
+                    <tr class="loading">
+                        <td colspan="8" id="loading-text">Loading data from JSON file...</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div id="no-results" class="no-results">
+                No incidents match your search criteria. Try adjusting your filters.
+            </div>
+            <div id="error-message" class="error-message">
+                Error loading data from JSON file. Please check if the file exists and is accessible.
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Data Source: local.CyberIncidentsDB.json | Displaying incidents with operational technology impacts</p>
+        </div>
+    </div>
+
+    <script>
+        // Глобальная переменная для хранения всех инцидентов
+        let allIncidents = [];
+        
+        // Функция для форматирования даты
+        function formatDate(dateString) {
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+            } catch (e) {
+                return dateString;
+            }
+        }
+        
+        // Функция для определения класса региона
+        function getRegionClass(region) {
+            if (!region) return "region-other";
+            
+            if (region.includes("USA") || region === "USA" || region.includes("United States")) return "region-usa";
+            if (region.includes("Canada") || region === "Canada") return "region-usa";
+            
+            const europeRegions = ["Germany", "France", "UK", "Sweden", "Finland", "Europe", "Italy", 
+                                  "Spain", "Belgium", "Netherlands", "Austria", "Switzerland", "Norway",
+                                  "Denmark", "Portugal", "Ireland", "Poland", "Lithuania", "Estonia",
+                                  "Croatia", "Greece", "Bulgaria"];
+            if (europeRegions.some(europeRegion => region.includes(europeRegion))) return "region-europe";
+            
+            const asiaRegions = ["Japan", "Taiwan", "China", "India", "Vietnam", "South Korea"];
+            if (asiaRegions.some(asiaRegion => region.includes(asiaRegion))) return "region-asia";
+            
+            const middleEastRegions = ["Lebanon", "Iran", "Israel", "Turkey", "Saudi Arabia", "UAE", 
+                                      "Qatar", "Middle East", "Syria", "Jordan", "Azerbaijan"];
+            if (middleEastRegions.some(middleEastRegion => region.includes(middleEastRegion))) return "region-middle-east";
+            
+            return "region-other";
+        }
+        
+        // Функция для очистки текста от артефактов
+        function cleanText(text) {
+            if (!text) return "";
+            return text.replace(/Direct, on OT - malware or threat actor manipulated OT systems/g, '')
+                       .replace(/Direct, malicious insider - an insider used their credentials or privilege to bring about physical OT consequences/g, '')
+                       .replace(/Direct, on OT - malware or threat actor manipulated OT systemswntime/g, 'downtime')
+                       .replace(/Direct, on OT - malware or threat actor manipulated OT systemswn/g, 'down')
+                       .replace(/Direct, on OT - malware or threat actor manipulated OT systemscument/g, 'document')
+                       .replace(/Direct, on OT - malware or threat actor manipulated OT systemstgpv/g, 'dotgov')
+                       .trim();
+        }
+        
+        // Функция для отображения данных в таблице
+        function renderTable(data) {
+            const tableBody = document.getElementById('table-body');
+            const incidentCount = document.getElementById('incident-count');
+            const noResults = document.getElementById('no-results');
+            const errorMessage = document.getElementById('error-message');
+            
+            // Скрываем сообщение об ошибке
+            errorMessage.style.display = 'none';
+            
+            // Обновляем количество инцидентов
+            incidentCount.textContent = data.length;
+            
+            // Очищаем таблицу
+            tableBody.innerHTML = '';
+            
+            // Если данных нет, показываем сообщение
+            if (data.length === 0) {
+                noResults.style.display = 'block';
+                return;
+            } else {
+                noResults.style.display = 'none';
+            }
+            
+            // Добавляем строки для каждого инцидента
+            data.forEach(incident => {
+                const row = document.createElement('tr');
+                
+                // Форматируем дату
+                let date = "Unknown";
+                if (incident.Date && incident.Date.$date) {
+                    date = formatDate(incident.Date.$date);
+                }
+                
+                // Очищаем текст от артефактов
+                const victim = cleanText(incident.Victim || "Unknown");
+                const region = cleanText(incident.Region || "Unknown");
+                const industry = cleanText(incident.Industry || "Unknown");
+                const threatActor = cleanText(incident['Threat Actor'] || "Unknown");
+                const attackType = cleanText(incident['OT Attack Type'] || "Unknown");
+                const consequences = cleanText(incident['OT / ICS Physical Consequences'] || "Unknown");
+                const summary = cleanText(incident['Incident Summary'] || "No summary available");
+                
+                // Определяем класс региона
+                const regionClass = getRegionClass(region);
+                
+                // Создаем HTML для строки
+                row.innerHTML = `
+                    <td>${date}</td>
+                    <td>${victim}</td>
+                    <td><span class="region-badge ${regionClass}">${region}</span></td>
+                    <td><span class="industry-tag">${industry}</span></td>
+                    <td>${threatActor}</td>
+                    <td>${attackType}</td>
+                    <td class="consequences">${consequences}</td>
+                    <td>
+                        <div class="summary-text">${summary}</div>
+                        <a href="#" class="more-link" onclick="expandSummary(this); return false;">Read more</a>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // Функция для фильтрации данных
+        function filterData() {
+            const searchInput = document.getElementById('search-input').value.toLowerCase();
+            const regionFilter = document.getElementById('region-filter').value;
+            const industryFilter = document.getElementById('industry-filter').value;
+            
+            const filteredData = allIncidents.filter(incident => {
+                // Очищаем текст для поиска
+                const victim = cleanText(incident.Victim || "");
+                const region = cleanText(incident.Region || "");
+                const industry = cleanText(incident.Industry || "");
+                const threatActor = cleanText(incident['Threat Actor'] || "");
+                const attackType = cleanText(incident['OT Attack Type'] || "");
+                const consequences = cleanText(incident['OT / ICS Physical Consequences'] || "");
+                const summary = cleanText(incident['Incident Summary'] || "");
+                
+                // Поиск по всем текстовым полям
+                const searchFields = [
+                    victim,
+                    region,
+                    industry,
+                    threatActor,
+                    attackType,
+                    consequences,
+                    summary
+                ].join(' ').toLowerCase();
+                
+                const matchesSearch = searchInput === '' || searchFields.includes(searchInput);
+                const matchesRegion = regionFilter === '' || region.includes(regionFilter);
+                const matchesIndustry = industryFilter === '' || industry.includes(industryFilter);
+                
+                return matchesSearch && matchesRegion && matchesIndustry;
+            });
+            
+            renderTable(filteredData);
+        }
+        
+        // Функция для разворачивания/сворачивания текста
+        function expandSummary(link) {
+            const summaryDiv = link.previousElementSibling;
+            
+            if (summaryDiv.style.maxHeight && summaryDiv.style.maxHeight !== '60px') {
+                summaryDiv.style.maxHeight = '60px';
+                summaryDiv.style.webkitLineClamp = '3';
+                link.textContent = 'Read more';
+            } else {
+                summaryDiv.style.maxHeight = 'none';
+                summaryDiv.style.webkitLineClamp = 'unset';
+                link.textContent = 'Show less';
+            }
+        }
+        
+        // Функция для загрузки данных из JSON файла
+        async function loadJSONData() {
+            const loadingText = document.getElementById('loading-text');
+            const errorMessage = document.getElementById('error-message');
+            
+            try {
+                // Пытаемся загрузить данные из JSON файла
+                loadingText.textContent = 'Loading data from JSON file...';
+                
+                // Укажите правильный путь к вашему JSON файлу
+                const response = await fetch('/database/local.CyberIncidentsDB.json');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Проверяем, что данные загружены
+                if (data && Array.isArray(data)) {
+                    allIncidents = data;
+                    loadingText.textContent = `Loaded ${data.length} incidents`;
+                    
+                    // Ждем немного перед рендерингом, чтобы пользователь увидел сообщение
+                    setTimeout(() => {
+                        renderTable(allIncidents);
+                    }, 500);
+                } else {
+                    throw new Error('Invalid JSON format or empty data');
+                }
+                
+            } catch (error) {
+                console.error('Error loading JSON data:', error);
+                loadingText.textContent = 'Error loading data';
+                errorMessage.style.display = 'block';
+                errorMessage.innerHTML = `Error loading data: ${error.message}<br>Make sure the file 'local.CyberIncidentsDB.json' is in the same directory as this HTML file.`;
+            }
+        }
+        
+        // Функция для извлечения уникальных регионов и отраслей для фильтров
+        function populateFilterOptions() {
+            const regionFilter = document.getElementById('region-filter');
+            const industryFilter = document.getElementById('industry-filter');
+            
+            // Если данных еще нет, выходим
+            if (allIncidents.length === 0) return;
+            
+            // Извлекаем уникальные регионы
+            const regions = new Set();
+            allIncidents.forEach(incident => {
+                const region = cleanText(incident.Region);
+                if (region && region !== "Unknown") {
+                    // Разделяем регионы, если их несколько (например, "Finland, Sweden, Norway, Germany")
+                    const regionParts = region.split(',').map(r => r.trim());
+                    regionParts.forEach(part => {
+                        if (part) regions.add(part);
+                    });
+                }
+            });
+            
+            // Сортируем и добавляем в фильтр
+            const sortedRegions = Array.from(regions).sort();
+            sortedRegions.forEach(region => {
+                const option = document.createElement('option');
+                option.value = region;
+                option.textContent = region;
+                regionFilter.appendChild(option);
+            });
+            
+            // Извлекаем уникальные отрасли
+            const industries = new Set();
+            allIncidents.forEach(incident => {
+                const industry = cleanText(incident.Industry);
+                if (industry && industry !== "Unknown") {
+                    industries.add(industry);
+                }
+            });
+            
+            // Сортируем и добавляем в фильтр
+            const sortedIndustries = Array.from(industries).sort();
+            sortedIndustries.forEach(industry => {
+                const option = document.createElement('option');
+                option.value = industry;
+                option.textContent = industry;
+                industryFilter.appendChild(option);
+            });
+        }
+        
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Загружаем данные из JSON файла
+            await loadJSONData();
+            
+            // После загрузки данных заполняем фильтры
+            populateFilterOptions();
+            
+            // Добавляем обработчики событий для фильтров
+            document.getElementById('search-input').addEventListener('input', filterData);
+            document.getElementById('region-filter').addEventListener('change', filterData);
+            document.getElementById('industry-filter').addEventListener('change', filterData);
+        });
+    </script>
+</body>
+</html>
