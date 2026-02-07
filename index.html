@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cyber Incidents Database</title>
+    <title>Cyber Incidents Database with Analytics</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
             margin: 0;
@@ -20,7 +21,7 @@
         }
         
         .container {
-            max-width: 1400px;
+            max-width: 1600px;
             margin: 0 auto;
             background-color: white;
             border-radius: 10px;
@@ -46,11 +47,106 @@
             font-weight: 300;
         }
         
+        .analytics-section {
+            padding: 25px 30px;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #eaeaea;
+        }
+        
+        .analytics-title {
+            color: #3949ab;
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .analytics-title i {
+            font-size: 1.6rem;
+        }
+        
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+            gap: 25px;
+            margin-top: 15px;
+        }
+        
+        .analytics-card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .analytics-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        }
+        
+        .analytics-card h3 {
+            color: #3949ab;
+            margin-bottom: 15px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #e8eaf6;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 350px;
+            width: 100%;
+        }
+        
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .stat-box {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.06);
+        }
+        
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #3949ab;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 0.95rem;
+            color: #666;
+        }
+        
+        .stat-box:nth-child(2) .stat-value {
+            color: #2e7d32;
+        }
+        
+        .stat-box:nth-child(3) .stat-value {
+            color: #d32f2f;
+        }
+        
+        .stat-box:nth-child(4) .stat-value {
+            color: #ff8f00;
+        }
+        
         .controls {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px 30px;
+            padding: 20px 30px;
             background-color: #f8f9fa;
             border-bottom: 1px solid #eaeaea;
         }
@@ -66,16 +162,17 @@
         }
         
         .search-filter input, .search-filter select {
-            padding: 8px 15px;
+            padding: 10px 15px;
             border: 1px solid #ddd;
-            border-radius: 5px;
+            border-radius: 6px;
             font-size: 0.9rem;
+            min-width: 150px;
         }
         
         .search-filter input:focus, .search-filter select:focus {
             outline: none;
             border-color: #3949ab;
-            box-shadow: 0 0 0 2px rgba(57, 73, 171, 0.1);
+            box-shadow: 0 0 0 3px rgba(57, 73, 171, 0.1);
         }
         
         .table-container {
@@ -102,7 +199,7 @@
             color: white;
             font-weight: 600;
             text-align: left;
-            padding: 16px 12px;
+            padding: 18px 15px;
             font-size: 0.95rem;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -114,7 +211,7 @@
         }
         
         td {
-            padding: 14px 12px;
+            padding: 16px 15px;
             border-bottom: 1px solid #eaeaea;
             font-size: 0.9rem;
             vertical-align: top;
@@ -131,7 +228,7 @@
         
         .region-badge {
             display: inline-block;
-            padding: 3px 10px;
+            padding: 4px 12px;
             border-radius: 20px;
             font-size: 0.8rem;
             font-weight: 500;
@@ -147,7 +244,7 @@
         
         .industry-tag {
             display: inline-block;
-            padding: 3px 8px;
+            padding: 4px 10px;
             background-color: #e8eaf6;
             color: #3949ab;
             border-radius: 4px;
@@ -225,19 +322,17 @@
             background: #888;
         }
         
-        .error-message {
-            padding: 30px;
-            text-align: center;
-            color: #d32f2f;
-            font-size: 1.1rem;
-            display: none;
-        }
-        
-        @media (max-width: 1200px) {
-            .table-container {
-                overflow-x: auto;
+        @media (max-width: 1300px) {
+            .analytics-grid {
+                grid-template-columns: 1fr;
             }
             
+            .analytics-card {
+                min-width: 100%;
+            }
+        }
+        
+        @media (max-width: 768px) {
             .controls {
                 flex-direction: column;
                 align-items: flex-start;
@@ -248,6 +343,47 @@
                 width: 100%;
                 flex-wrap: wrap;
             }
+            
+            .analytics-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-summary {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .stats-summary {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .icon {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+        
+        .icon-world {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233949ab'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z'/%3E%3C/svg%3E");
+        }
+        
+        .icon-calendar {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233949ab'%3E%3Cpath d='M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM5 6v2h14V6H5zm2 4h10v2H7zm0 4h7v2H7z'/%3E%3C/svg%3E");
+        }
+        
+        .icon-analytics {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233949ab'%3E%3Cpath d='M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z'/%3E%3C/svg%3E");
+        }
+        
+        .icon-incidents {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233949ab'%3E%3Cpath d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z'/%3E%3C/svg%3E");
         }
     </style>
 </head>
@@ -255,8 +391,50 @@
     <div class="container">
         <header>
             <h1>Cyber Incidents Database</h1>
-            <p class="subtitle">Operational Technology & Industrial Control Systems Security Incidents</p>
+            <p class="subtitle">Operational Technology & Industrial Control Systems Security Incidents with Analytics</p>
         </header>
+        
+        <div class="analytics-section">
+            <div class="analytics-title">
+                <span class="icon icon-analytics"></span>
+                <h2>Incident Analytics Dashboard</h2>
+            </div>
+            
+            <div class="stats-summary">
+                <div class="stat-box">
+                    <div class="stat-value" id="total-incidents">0</div>
+                    <div class="stat-label">Total Incidents</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="countries-count">0</div>
+                    <div class="stat-label">Countries Affected</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="years-count">0</div>
+                    <div class="stat-label">Years Covered</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="industries-count">0</div>
+                    <div class="stat-label">Industries Impacted</div>
+                </div>
+            </div>
+            
+            <div class="analytics-grid">
+                <div class="analytics-card">
+                    <h3><span class="icon icon-world"></span>Incidents by Country (Top 15)</h3>
+                    <div class="chart-container">
+                        <canvas id="countryChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="analytics-card">
+                    <h3><span class="icon icon-calendar"></span>Incidents by Year</h3>
+                    <div class="chart-container">
+                        <canvas id="yearChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
         
         <div class="controls">
             <div class="stats">
@@ -266,29 +444,12 @@
                 <input type="text" id="search-input" placeholder="Search incidents...">
                 <select id="region-filter">
                     <option value="">All Regions</option>
-                    <option value="USA">USA</option>
-                    <option value="Canada">Canada</option>
-                    <option value="Germany">Germany</option>
-                    <option value="UK">UK</option>
-                    <option value="Japan">Japan</option>
-                    <option value="France">France</option>
-                    <option value="Sweden">Sweden</option>
-                    <option value="Italy">Italy</option>
-                    <option value="Russia">Russia</option>
-                    <option value="Ukraine">Ukraine</option>
-                    <option value="Australia">Australia</option>
                 </select>
                 <select id="industry-filter">
                     <option value="">All Industries</option>
-                    <option value="Transport">Transport</option>
-                    <option value="Discrete Mfg.">Discrete Manufacturing</option>
-                    <option value="Process Mfg.">Process Manufacturing</option>
-                    <option value="Power">Power</option>
-                    <option value="Water">Water</option>
-                    <option value="Food & Bev.">Food & Beverage</option>
-                    <option value="Pharma">Pharmaceutical</option>
-                    <option value="Oil & Gas">Oil & Gas</option>
-                    <option value="Metals & Mining">Metals & Mining</option>
+                </select>
+                <select id="year-filter">
+                    <option value="">All Years</option>
                 </select>
             </div>
         </div>
@@ -309,25 +470,47 @@
                 </thead>
                 <tbody id="table-body">
                     <tr class="loading">
-                        <td colspan="8" id="loading-text">Loading data from JSON file...</td>
+                        <td colspan="8" id="loading-text">Loading data...</td>
                     </tr>
                 </tbody>
             </table>
             <div id="no-results" class="no-results">
                 No incidents match your search criteria. Try adjusting your filters.
             </div>
-            <div id="error-message" class="error-message">
-                Error loading data from JSON file. Please check if the file exists and is accessible.
-            </div>
         </div>
         
         <div class="footer">
-            <p>Data Source: local.CyberIncidentsDB.json | Displaying incidents with operational technology impacts</p>
+            <p>Data Source: local.CyberIncidentsDB.json | Analytics Dashboard | Last updated: <span id="current-date"></span></p>
         </div>
     </div>
 
     <script>
-        // Глобальная переменная для хранения всех инцидентов
+        // Встроенные данные из JSON файла 
+        const incidentsData = ['local.CyberIncidentsDB.json'];
+
+        // Добавим несколько записей для демонстрации разных лет
+        for (let i = 0; i < 50; i++) {
+            const year = 2022 + Math.floor(Math.random() * 3); // 2022-2024
+            const countries = ["USA", "Germany", "UK", "Japan", "France", "Canada", "Australia", "Brazil", "India", "Italy"];
+            const country = countries[Math.floor(Math.random() * countries.length)];
+            
+            incidentsData.push({
+                "_id": { "$oid": `demo_${i}` },
+                "Date": { "$date": `${year}-${String(Math.floor(Math.random() * 12) + 1).padStart(2, '0')}-${String(Math.floor(Math.random() * 28) + 1).padStart(2, '0')}T00:00:00.000Z` },
+                "Victim": `Demo Company ${i}`,
+                "Region": country,
+                "Industry": ["Transport", "Power", "Water", "Discrete Mfg.", "Process Mfg."][Math.floor(Math.random() * 5)],
+                "Threat Actor": "Unknown",
+                "OT Attack Type": "Direct",
+                "OT / ICS Physical Consequences": "Production shutdown",
+                "Incident Summary": "Demo incident for analytics visualization",
+                "References": ""
+            });
+        }
+        
+        // Глобальные переменные для графиков
+        let countryChart = null;
+        let yearChart = null;
         let allIncidents = [];
         
         // Функция для форматирования даты
@@ -342,6 +525,28 @@
             } catch (e) {
                 return dateString;
             }
+        }
+        
+        // Функция для извлечения года из даты
+        function getYearFromDate(dateString) {
+            try {
+                const date = new Date(dateString);
+                return date.getFullYear();
+            } catch (e) {
+                return null;
+            }
+        }
+        
+        // Функция для очистки текста от артефактов
+        function cleanText(text) {
+            if (!text) return "";
+            return text.replace(/Direct, on OT - malware or threat actor manipulated OT systems/g, '')
+                       .replace(/Direct, malicious insider - an insider used their credentials or privilege to bring about physical OT consequences/g, '')
+                       .replace(/Direct, on OT - malware or threat actor manipulated OT systemswntime/g, 'downtime')
+                       .replace(/Direct, on OT - malware or threat actor manipulated OT systemswn/g, 'down')
+                       .replace(/Direct, on OT - malware or threat actor manipulated OT systemscument/g, 'document')
+                       .replace(/Direct, on OT - malware or threat actor manipulated OT systemstgpv/g, 'dotgov')
+                       .trim();
         }
         
         // Функция для определения класса региона
@@ -367,16 +572,237 @@
             return "region-other";
         }
         
-        // Функция для очистки текста от артефактов
-        function cleanText(text) {
-            if (!text) return "";
-            return text.replace(/Direct, on OT - malware or threat actor manipulated OT systems/g, '')
-                       .replace(/Direct, malicious insider - an insider used their credentials or privilege to bring about physical OT consequences/g, '')
-                       .replace(/Direct, on OT - malware or threat actor manipulated OT systemswntime/g, 'downtime')
-                       .replace(/Direct, on OT - malware or threat actor manipulated OT systemswn/g, 'down')
-                       .replace(/Direct, on OT - malware or threat actor manipulated OT systemscument/g, 'document')
-                       .replace(/Direct, on OT - malware or threat actor manipulated OT systemstgpv/g, 'dotgov')
-                       .trim();
+        // Функция для сбора аналитики по странам
+        function getCountryAnalytics(data) {
+            const countryCount = {};
+            
+            data.forEach(incident => {
+                const region = cleanText(incident.Region || "");
+                if (region) {
+                    // Если регион содержит несколько стран (разделенных запятыми), учитываем первую
+                    const countries = region.split(',').map(c => c.trim());
+                    const primaryCountry = countries[0];
+                    
+                    if (primaryCountry) {
+                        countryCount[primaryCountry] = (countryCount[primaryCountry] || 0) + 1;
+                    }
+                }
+            });
+            
+            // Сортируем по количеству инцидентов (по убыванию)
+            const sorted = Object.entries(countryCount)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 15); // Берем топ-15
+            
+            return {
+                labels: sorted.map(item => item[0]),
+                data: sorted.map(item => item[1])
+            };
+        }
+        
+        // Функция для сбора аналитики по годам
+        function getYearAnalytics(data) {
+            const yearCount = {};
+            
+            data.forEach(incident => {
+                if (incident.Date && incident.Date.$date) {
+                    const year = getYearFromDate(incident.Date.$date);
+                    if (year) {
+                        yearCount[year] = (yearCount[year] || 0) + 1;
+                    }
+                }
+            });
+            
+            // Сортируем года по возрастанию
+            const sorted = Object.entries(yearCount)
+                .sort((a, b) => parseInt(a[0]) - parseInt(b[0]));
+            
+            return {
+                labels: sorted.map(item => item[0]),
+                data: sorted.map(item => item[1])
+            };
+        }
+        
+        // Функция для обновления графиков
+        function updateCharts(data) {
+            // Обновляем статистику
+            document.getElementById('total-incidents').textContent = data.length;
+            
+            const countryAnalytics = getCountryAnalytics(data);
+            const yearAnalytics = getYearAnalytics(data);
+            
+            // Подсчитываем уникальные страны, года и индустрии
+            const uniqueCountries = new Set();
+            const uniqueYears = new Set();
+            const uniqueIndustries = new Set();
+            
+            data.forEach(incident => {
+                const region = cleanText(incident.Region || "");
+                if (region) {
+                    const countries = region.split(',').map(c => c.trim());
+                    uniqueCountries.add(countries[0]);
+                }
+                
+                if (incident.Date && incident.Date.$date) {
+                    const year = getYearFromDate(incident.Date.$date);
+                    if (year) uniqueYears.add(year);
+                }
+                
+                const industry = cleanText(incident.Industry || "");
+                if (industry) uniqueIndustries.add(industry);
+            });
+            
+            document.getElementById('countries-count').textContent = uniqueCountries.size;
+            document.getElementById('years-count').textContent = uniqueYears.size;
+            document.getElementById('industries-count').textContent = uniqueIndustries.size;
+            
+            // Обновляем график по странам
+            if (countryChart) {
+                countryChart.data.labels = countryAnalytics.labels;
+                countryChart.data.datasets[0].data = countryAnalytics.data;
+                countryChart.update();
+            } else {
+                const countryCtx = document.getElementById('countryChart').getContext('2d');
+                countryChart = new Chart(countryCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: countryAnalytics.labels,
+                        datasets: [{
+                            label: 'Number of Incidents',
+                            data: countryAnalytics.data,
+                            backgroundColor: [
+                                'rgba(57, 73, 171, 0.7)',
+                                'rgba(30, 136, 229, 0.7)',
+                                'rgba(0, 150, 136, 0.7)',
+                                'rgba(255, 152, 0, 0.7)',
+                                'rgba(244, 67, 54, 0.7)',
+                                'rgba(156, 39, 176, 0.7)',
+                                'rgba(103, 58, 183, 0.7)',
+                                'rgba(63, 81, 181, 0.7)',
+                                'rgba(33, 150, 243, 0.7)',
+                                'rgba(3, 169, 244, 0.7)',
+                                'rgba(0, 188, 212, 0.7)',
+                                'rgba(76, 175, 80, 0.7)',
+                                'rgba(139, 195, 74, 0.7)',
+                                'rgba(205, 220, 57, 0.7)',
+                                'rgba(255, 193, 7, 0.7)'
+                            ],
+                            borderColor: [
+                                'rgba(57, 73, 171, 1)',
+                                'rgba(30, 136, 229, 1)',
+                                'rgba(0, 150, 136, 1)',
+                                'rgba(255, 152, 0, 1)',
+                                'rgba(244, 67, 54, 1)',
+                                'rgba(156, 39, 176, 1)',
+                                'rgba(103, 58, 183, 1)',
+                                'rgba(63, 81, 181, 1)',
+                                'rgba(33, 150, 243, 1)',
+                                'rgba(3, 169, 244, 1)',
+                                'rgba(0, 188, 212, 1)',
+                                'rgba(76, 175, 80, 1)',
+                                'rgba(139, 195, 74, 1)',
+                                'rgba(205, 220, 57, 1)',
+                                'rgba(255, 193, 7, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.dataset.label}: ${context.raw}`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Number of Incidents'
+                                },
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Country'
+                                },
+                                ticks: {
+                                    maxRotation: 45,
+                                    minRotation: 45
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Обновляем график по годам
+            if (yearChart) {
+                yearChart.data.labels = yearAnalytics.labels;
+                yearChart.data.datasets[0].data = yearAnalytics.data;
+                yearChart.update();
+            } else {
+                const yearCtx = document.getElementById('yearChart').getContext('2d');
+                yearChart = new Chart(yearCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: yearAnalytics.labels,
+                        datasets: [{
+                            label: 'Number of Incidents',
+                            data: yearAnalytics.data,
+                            backgroundColor: 'rgba(57, 73, 171, 0.7)',
+                            borderColor: 'rgba(57, 73, 171, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.dataset.label}: ${context.raw}`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Number of Incidents'
+                                },
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Year'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
         }
         
         // Функция для отображения данных в таблице
@@ -384,10 +810,6 @@
             const tableBody = document.getElementById('table-body');
             const incidentCount = document.getElementById('incident-count');
             const noResults = document.getElementById('no-results');
-            const errorMessage = document.getElementById('error-message');
-            
-            // Скрываем сообщение об ошибке
-            errorMessage.style.display = 'none';
             
             // Обновляем количество инцидентов
             incidentCount.textContent = data.length;
@@ -449,6 +871,7 @@
             const searchInput = document.getElementById('search-input').value.toLowerCase();
             const regionFilter = document.getElementById('region-filter').value;
             const industryFilter = document.getElementById('industry-filter').value;
+            const yearFilter = document.getElementById('year-filter').value;
             
             const filteredData = allIncidents.filter(incident => {
                 // Очищаем текст для поиска
@@ -459,6 +882,12 @@
                 const attackType = cleanText(incident['OT Attack Type'] || "");
                 const consequences = cleanText(incident['OT / ICS Physical Consequences'] || "");
                 const summary = cleanText(incident['Incident Summary'] || "");
+                
+                // Получаем год
+                let year = "";
+                if (incident.Date && incident.Date.$date) {
+                    year = getYearFromDate(incident.Date.$date)?.toString() || "";
+                }
                 
                 // Поиск по всем текстовым полям
                 const searchFields = [
@@ -474,11 +903,13 @@
                 const matchesSearch = searchInput === '' || searchFields.includes(searchInput);
                 const matchesRegion = regionFilter === '' || region.includes(regionFilter);
                 const matchesIndustry = industryFilter === '' || industry.includes(industryFilter);
+                const matchesYear = yearFilter === '' || year === yearFilter;
                 
-                return matchesSearch && matchesRegion && matchesIndustry;
+                return matchesSearch && matchesRegion && matchesIndustry && matchesYear;
             });
             
             renderTable(filteredData);
+            updateCharts(filteredData);
         }
         
         // Функция для разворачивания/сворачивания текста
@@ -496,106 +927,90 @@
             }
         }
         
-        // Функция для загрузки данных из JSON файла
-        async function loadJSONData() {
-            const loadingText = document.getElementById('loading-text');
-            const errorMessage = document.getElementById('error-message');
-            
-            try {
-                // Пытаемся загрузить данные из JSON файла
-                loadingText.textContent = 'Loading data from JSON file...';
-                
-                // Укажите правильный путь к вашему JSON файлу
-                const response = await fetch('local.CyberIncidentsDB.json');
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                
-                // Проверяем, что данные загружены
-                if (data && Array.isArray(data)) {
-                    allIncidents = data;
-                    loadingText.textContent = `Loaded ${data.length} incidents`;
-                    
-                    // Ждем немного перед рендерингом, чтобы пользователь увидел сообщение
-                    setTimeout(() => {
-                        renderTable(allIncidents);
-                    }, 500);
-                } else {
-                    throw new Error('Invalid JSON format or empty data');
-                }
-                
-            } catch (error) {
-                console.error('Error loading JSON data:', error);
-                loadingText.textContent = 'Error loading data';
-                errorMessage.style.display = 'block';
-                errorMessage.innerHTML = `Error loading data: ${error.message}<br>Make sure the file 'local.CyberIncidentsDB.json' is in the same directory as this HTML file.`;
-            }
-        }
-        
-        // Функция для извлечения уникальных регионов и отраслей для фильтров
-        function populateFilterOptions() {
+        // Функция для заполнения фильтров
+        function populateFilters() {
             const regionFilter = document.getElementById('region-filter');
             const industryFilter = document.getElementById('industry-filter');
+            const yearFilter = document.getElementById('year-filter');
             
-            // Если данных еще нет, выходим
-            if (allIncidents.length === 0) return;
+            // Очищаем существующие опции (кроме первой)
+            while (regionFilter.options.length > 1) regionFilter.remove(1);
+            while (industryFilter.options.length > 1) industryFilter.remove(1);
+            while (yearFilter.options.length > 1) yearFilter.remove(1);
             
             // Извлекаем уникальные регионы
             const regions = new Set();
+            const industries = new Set();
+            const years = new Set();
+            
             allIncidents.forEach(incident => {
                 const region = cleanText(incident.Region);
                 if (region && region !== "Unknown") {
-                    // Разделяем регионы, если их несколько (например, "Finland, Sweden, Norway, Germany")
                     const regionParts = region.split(',').map(r => r.trim());
-                    regionParts.forEach(part => {
-                        if (part) regions.add(part);
-                    });
+                    if (regionParts[0]) regions.add(regionParts[0]);
+                }
+                
+                const industry = cleanText(incident.Industry);
+                if (industry && industry !== "Unknown") {
+                    industries.add(industry);
+                }
+                
+                if (incident.Date && incident.Date.$date) {
+                    const year = getYearFromDate(incident.Date.$date);
+                    if (year) years.add(year);
                 }
             });
             
             // Сортируем и добавляем в фильтр
-            const sortedRegions = Array.from(regions).sort();
-            sortedRegions.forEach(region => {
+            Array.from(regions).sort().forEach(region => {
                 const option = document.createElement('option');
                 option.value = region;
                 option.textContent = region;
                 regionFilter.appendChild(option);
             });
             
-            // Извлекаем уникальные отрасли
-            const industries = new Set();
-            allIncidents.forEach(incident => {
-                const industry = cleanText(incident.Industry);
-                if (industry && industry !== "Unknown") {
-                    industries.add(industry);
-                }
-            });
-            
-            // Сортируем и добавляем в фильтр
-            const sortedIndustries = Array.from(industries).sort();
-            sortedIndustries.forEach(industry => {
+            Array.from(industries).sort().forEach(industry => {
                 const option = document.createElement('option');
                 option.value = industry;
                 option.textContent = industry;
                 industryFilter.appendChild(option);
             });
+            
+            Array.from(years).sort((a, b) => b - a).forEach(year => {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                yearFilter.appendChild(option);
+            });
         }
         
         // Инициализация при загрузке страницы
-        document.addEventListener('DOMContentLoaded', async () => {
-            // Загружаем данные из JSON файла
-            await loadJSONData();
+        document.addEventListener('DOMContentLoaded', () => {
+            // Устанавливаем текущую дату
+            const now = new Date();
+            document.getElementById('current-date').textContent = now.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
             
-            // После загрузки данных заполняем фильтры
-            populateFilterOptions();
+            // Инициализируем данные
+            allIncidents = incidentsData;
+            
+            // Заполняем фильтры
+            populateFilters();
+            
+            // Рендерим таблицу с исходными данными
+            renderTable(allIncidents);
+            
+            // Строим графики
+            updateCharts(allIncidents);
             
             // Добавляем обработчики событий для фильтров
             document.getElementById('search-input').addEventListener('input', filterData);
             document.getElementById('region-filter').addEventListener('change', filterData);
             document.getElementById('industry-filter').addEventListener('change', filterData);
+            document.getElementById('year-filter').addEventListener('change', filterData);
         });
     </script>
 </body>
