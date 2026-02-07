@@ -249,6 +249,121 @@
                 flex-wrap: wrap;
             }
         }
+     /* Стили для столбца References */
+    .references-cell {
+        max-width: 150px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .ref-link {
+        display: inline-block;
+        padding: 3px 8px;
+        background-color: #e8f5e9;
+        color: #2e7d32;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        text-decoration: none;
+        margin: 2px 0;
+        transition: all 0.2s ease;
+    }
+    
+    .ref-link:hover {
+        background-color: #c8e6c9;
+        text-decoration: underline;
+    }
+    
+    .ref-text {
+        display: inline-block;
+        padding: 3px 6px;
+        background-color: #f5f5f5;
+        color: #666;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        margin: 2px 0;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    .no-ref {
+        color: #999;
+        font-style: italic;
+        font-size: 0.8rem;
+    }
+    
+    /* Стили для модального окна References */
+    .references-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+    
+    .references-modal .modal-content {
+        background-color: white;
+        border-radius: 8px;
+        width: 80%;
+        max-width: 600px;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    }
+    
+    .references-modal .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px;
+        border-bottom: 1px solid #eaeaea;
+        background-color: #f8f9fa;
+        border-radius: 8px 8px 0 0;
+    }
+    
+    .references-modal .modal-header h3 {
+        margin: 0;
+        color: #1a237e;
+    }
+    
+    .references-modal .close-modal {
+        font-size: 24px;
+        cursor: pointer;
+        color: #666;
+        transition: color 0.2s ease;
+    }
+    
+    .references-modal .close-modal:hover {
+        color: #d32f2f;
+    }
+    
+    .references-modal .modal-body {
+        padding: 20px;
+    }
+    
+    .references-modal .modal-body ul {
+        padding-left: 20px;
+    }
+    
+    .references-modal .modal-body li {
+        margin-bottom: 10px;
+        word-break: break-all;
+    }
+    
+    .references-modal .modal-body a {
+        color: #3949ab;
+        text-decoration: none;
+    }
+    
+    .references-modal .modal-body a:hover {
+        text-decoration: underline;
+    }
     </style>
 </head>
 <body>
@@ -591,6 +706,114 @@
         };
     }
     
+    //  Функция для форматирования References
+function formatReferences(refs) {
+    if (!refs) return "<span class='no-ref'>No ref</span>";
+    
+    // Если это массив
+    if (Array.isArray(refs)) {
+        return refs.map(ref => {
+            if (ref && typeof ref === 'object' && ref.$oid) {
+                return `<a href="#" class="ref-link" onclick="openReference('${ref.$oid}')">Ref</a>`;
+            } else if (typeof ref === 'string') {
+                // Проверяем, является ли строка URL
+                if (ref.startsWith('http://') || ref.startsWith('https://')) {
+                    return `<a href="${ref}" target="_blank" class="ref-link">Link</a>`;
+                } else {
+                    return `<span class="ref-text">${truncateText(ref, 20)}</span>`;
+                }
+            }
+            return '';
+        }).join('<br>');
+    }
+    
+    // Если это строка
+    if (typeof refs === 'string') {
+        // Пытаемся разделить по запятым, точкам с запятой или переносам строк
+        const refArray = refs.split(/[,;\n]/).map(r => r.trim()).filter(r => r);
+        
+        if (refArray.length > 1) {
+            return refArray.map(ref => {
+                if (ref.startsWith('http://') || ref.startsWith('https://')) {
+                    return `<a href="${ref}" target="_blank" class="ref-link">Link</a>`;
+                } else {
+                    return `<span class="ref-text">${truncateText(ref, 20)}</span>`;
+                }
+            }).join('<br>');
+        } else {
+            if (refs.startsWith('http://') || refs.startsWith('https://')) {
+                return `<a href="${refs}" target="_blank" class="ref-link">Link</a>`;
+            } else {
+                return `<span class="ref-text">${truncateText(refs, 30)}</span>`;
+            }
+        }
+    }
+    
+    // Если это объект (например, $oid)
+    if (typeof refs === 'object' && refs.$oid) {
+        return `<a href="#" class="ref-link" onclick="openReference('${refs.$oid}')">Ref</a>`;
+    }
+    
+    return "<span class='no-ref'>No ref</span>";
+}
+    
+    // Функцию для открытия References
+function openReference(refId) {
+    alert(`Reference ID: ${refId}\n\nIn a real application, this would open detailed reference information or navigate to the source.`);
+    // В реальном приложении здесь может быть:
+    // window.open(`/reference/${refId}`, '_blank');
+    // или показать модальное окно с деталями
+}
+
+// 6. Добавьте функцию для отображения всех References
+function showAllReferences(references) {
+    // Создаем модальное окно для показа всех ссылок
+    const modal = document.createElement('div');
+    modal.className = 'references-modal';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>References</h3>
+                <span class="close-modal" onclick="this.parentElement.parentElement.parentElement.remove()">&times;</span>
+            </div>
+            <div class="modal-body">
+                ${formatReferencesDetailed(references)}
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+    
+    //  Функция для детального форматирования References
+function formatReferencesDetailed(refs) {
+    if (!refs) return "<p>No references available.</p>";
+    
+    let html = '';
+    
+    if (Array.isArray(refs)) {
+        html = '<ul>';
+        refs.forEach((ref, index) => {
+            html += '<li>';
+            if (typeof ref === 'string') {
+                if (ref.startsWith('http://') || ref.startsWith('https://')) {
+                    html += `<a href="${ref}" target="_blank">${ref}</a>`;
+                } else {
+                    html += ref;
+                }
+            } else if (typeof ref === 'object') {
+                html += JSON.stringify(ref);
+            }
+            html += '</li>';
+        });
+        html += '</ul>';
+    } else if (typeof refs === 'string') {
+        html = `<p>${refs}</p>`;
+    } else {
+        html = `<pre>${JSON.stringify(refs, null, 2)}</pre>`;
+    }
+    
+    return html;
+}
     // Function to generate colors for charts
     function generateColors(count, alpha = 1) {
         const colors = [
@@ -881,20 +1104,21 @@
         <div class="table-container">
             <table id="incidents-table">
                 <thead>
-                    <tr>
-                        <th width="100">Date</th>
-                        <th width="180">Victim</th>
-                        <th width="100">Region</th>
-                        <th width="120">Industry</th>
-                        <th width="150">Threat Actor</th>
-                        <th width="150">OT Attack Type</th>
-                        <th width="200">Physical Consequences</th>
-                        <th>Incident Summary</th>
-                    </tr>
+                   <tr>
+        <th width="100">Date</th>
+        <th width="180">Victim</th>
+        <th width="100">Region</th>
+        <th width="120">Industry</th>
+        <th width="150">Threat Actor</th>
+        <th width="150">OT Attack Type</th>
+        <th width="200">Physical Consequences</th>
+        <th>Incident Summary</th>
+        <th width="100">References</th> <!-- Добавленный столбец -->
+    </tr>
                 </thead>
                 <tbody id="table-body">
                     <tr class="loading">
-                        <td colspan="8" id="loading-text">Loading data from JSON file...</td>
+                        <td colspan="9" id="loading-text">Loading data from JSON file...</td>
                     </tr>
                 </tbody>
             </table>
@@ -1027,44 +1251,114 @@
                 
                 tableBody.appendChild(row);
             });
+       const tableBody = document.getElementById('table-body');
+    const incidentCount = document.getElementById('incident-count');
+    const noResults = document.getElementById('no-results');
+    const errorMessage = document.getElementById('error-message');
+    
+    // Скрываем сообщение об ошибке
+    errorMessage.style.display = 'none';
+    
+    // Обновляем количество инцидентов
+    incidentCount.textContent = data.length;
+    
+    // Очищаем таблицу
+    tableBody.innerHTML = '';
+    
+    // Если данных нет, показываем сообщение
+    if (data.length === 0) {
+        noResults.style.display = 'block';
+        return;
+    } else {
+        noResults.style.display = 'none';
+    }
+    
+    // Добавляем строки для каждого инцидента
+    data.forEach(incident => {
+        const row = document.createElement('tr');
+        
+        // Форматируем дату
+        let date = "Unknown";
+        if (incident.Date && incident.Date.$date) {
+            date = formatDate(incident.Date.$date);
+        }
+        
+        // Очищаем текст от артефактов
+        const victim = cleanText(incident.Victim || "Unknown");
+        const region = cleanText(incident.Region || "Unknown");
+        const industry = cleanText(incident.Industry || "Unknown");
+        const threatActor = cleanText(incident['Threat Actor'] || "Unknown");
+        const attackType = cleanText(incident['OT Attack Type'] || "Unknown");
+        const consequences = cleanText(incident['OT / ICS Physical Consequences'] || "Unknown");
+        const summary = cleanText(incident['Incident Summary'] || "No summary available");
+        
+        // Получаем References
+        const references = incident['References'] || incident['Reference'] || incident['Source'] || "";
+        
+        // Определяем класс региона
+        const regionClass = getRegionClass(region);
+        
+        // Форматируем References
+        const referencesHtml = formatReferences(references);
+        
+        // Создаем HTML для строки
+        row.innerHTML = `
+            <td>${date}</td>
+            <td>${victim}</td>
+            <td><span class="region-badge ${regionClass}">${region}</span></td>
+            <td><span class="industry-tag">${industry}</span></td>
+            <td>${threatActor}</td>
+            <td>${attackType}</td>
+            <td class="consequences">${consequences}</td>
+            <td>
+                <div class="summary-text">${summary}</div>
+                <a href="#" class="more-link" onclick="expandSummary(this); return false;">Read more</a>
+            </td>
+            <td class="references-cell">${referencesHtml}</td>
+        `;
+        
+        tableBody.appendChild(row);
+    });
         }
         
         // Функция для фильтрации данных
-        function filterData() {
-            const searchInput = document.getElementById('search-input').value.toLowerCase();
-            const regionFilter = document.getElementById('region-filter').value;
-            const industryFilter = document.getElementById('industry-filter').value;
-            
-            const filteredData = allIncidents.filter(incident => {
-                // Очищаем текст для поиска
-                const victim = cleanText(incident.Victim || "");
-                const region = cleanText(incident.Region || "");
-                const industry = cleanText(incident.Industry || "");
-                const threatActor = cleanText(incident['Threat Actor'] || "");
-                const attackType = cleanText(incident['OT Attack Type'] || "");
-                const consequences = cleanText(incident['OT / ICS Physical Consequences'] || "");
-                const summary = cleanText(incident['Incident Summary'] || "");
-                
-                // Поиск по всем текстовым полям
-                const searchFields = [
-                    victim,
-                    region,
-                    industry,
-                    threatActor,
-                    attackType,
-                    consequences,
-                    summary
-                ].join(' ').toLowerCase();
-                
-                const matchesSearch = searchInput === '' || searchFields.includes(searchInput);
-                const matchesRegion = regionFilter === '' || region.includes(regionFilter);
-                const matchesIndustry = industryFilter === '' || industry.includes(industryFilter);
-                
-                return matchesSearch && matchesRegion && matchesIndustry;
-            });
-            
-            renderTable(filteredData);
-        }
+       function filterData() {
+    const searchInput = document.getElementById('search-input').value.toLowerCase();
+    const regionFilter = document.getElementById('region-filter').value;
+    const industryFilter = document.getElementById('industry-filter').value;
+    
+    const filteredData = allIncidents.filter(incident => {
+        // Очищаем текст для поиска
+        const victim = cleanText(incident.Victim || "");
+        const region = cleanText(incident.Region || "");
+        const industry = cleanText(incident.Industry || "");
+        const threatActor = cleanText(incident['Threat Actor'] || "");
+        const attackType = cleanText(incident['OT Attack Type'] || "");
+        const consequences = cleanText(incident['OT / ICS Physical Consequences'] || "");
+        const summary = cleanText(incident['Incident Summary'] || "");
+        const references = JSON.stringify(incident['References'] || "").toLowerCase();
+        
+        // Поиск по всем текстовым полям, включая References
+        const searchFields = [
+            victim,
+            region,
+            industry,
+            threatActor,
+            attackType,
+            consequences,
+            summary,
+            references
+        ].join(' ').toLowerCase();
+        
+        const matchesSearch = searchInput === '' || searchFields.includes(searchInput);
+        const matchesRegion = regionFilter === '' || region.includes(regionFilter);
+        const matchesIndustry = industryFilter === '' || industry.includes(industryFilter);
+        
+        return matchesSearch && matchesRegion && matchesIndustry;
+    });
+    
+    renderTable(filteredData);
+}
         
         // Функция для разворачивания/сворачивания текста
         function expandSummary(link) {
