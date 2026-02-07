@@ -12,20 +12,30 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
-        body {
+        html, body {
+            height: 100%;
             background-color: #f5f7fa;
             color: #333;
             line-height: 1.6;
+        }
+        
+        body {
+            display: flex;
+            flex-direction: column;
             padding: 20px;
         }
         
         .container {
+            flex: 1;
             max-width: 1400px;
+            width: 100%;
             margin: 0 auto;
             background-color: white;
             border-radius: 10px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
         
         header {
@@ -33,6 +43,7 @@
             color: white;
             padding: 25px 30px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            flex-shrink: 0;
         }
         
         h1 {
@@ -53,6 +64,7 @@
             padding: 15px 30px;
             background-color: #f8f9fa;
             border-bottom: 1px solid #eaeaea;
+            flex-shrink: 0;
         }
         
         .stats {
@@ -79,8 +91,8 @@
         }
         
         .table-container {
+            flex: 1;
             position: relative;
-            max-height: 600px;
             overflow-y: auto;
             border-bottom: 1px solid #eaeaea;
         }
@@ -189,6 +201,7 @@
             font-size: 0.9rem;
             text-align: center;
             border-top: 1px solid #eaeaea;
+            flex-shrink: 0;
         }
         
         .loading {
@@ -231,30 +244,6 @@
             color: #d32f2f;
             font-size: 1.1rem;
             display: none;
-        }
-        
-        /* Стили для столбца References */
-        .references-cell {
-            max-width: 150px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            font-size: 0.8rem;
-            color: #666;
-        }
-        
-        .references-cell:hover {
-            white-space: normal;
-            overflow: visible;
-            background-color: #fff;
-            z-index: 100;
-            position: relative;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        
-        .no-ref {
-            color: #999;
-            font-style: italic;
         }
         
         /* Dashboard Styles */
@@ -559,12 +548,11 @@
                         <th width="150">OT Attack Type</th>
                         <th width="200">Physical Consequences</th>
                         <th>Incident Summary</th>
-                        <th width="100">References</th>
                     </tr>
                 </thead>
                 <tbody id="table-body">
                     <tr class="loading">
-                        <td colspan="9" id="loading-text">Loading data from JSON file...</td>
+                        <td colspan="8" id="loading-text">Loading data from JSON file...</td>
                     </tr>
                 </tbody>
             </table>
@@ -634,6 +622,43 @@
                        .trim();
         }
         
+        // Функция для преобразования References в текст
+        function referencesToText(refs) {
+            if (!refs) return "";
+            
+            // Если это массив
+            if (Array.isArray(refs)) {
+                return refs.map(ref => {
+                    if (ref && typeof ref === 'object' && ref.$oid) {
+                        return `ObjectID: ${ref.$oid}`;
+                    } else if (typeof ref === 'string') {
+                        // Убираем URL протоколы для отображения только текста
+                        let cleanedRef = ref
+                            .replace(/https?:\/\//g, '')
+                            .replace(/www\./g, '');
+                        return cleanedRef;
+                    }
+                    return '';
+                }).filter(ref => ref).join(', ');
+            }
+            
+            // Если это строка
+            if (typeof refs === 'string') {
+                // Убираем URL протоколы
+                let cleanedRef = refs
+                    .replace(/https?:\/\//g, '')
+                    .replace(/www\./g, '');
+                return cleanedRef;
+            }
+            
+            // Если это объект (например, $oid)
+            if (typeof refs === 'object' && refs.$oid) {
+                return `ObjectID: ${refs.$oid}`;
+            }
+            
+            return "";
+        }
+        
         // Функция для отображения данных в таблице
         function renderTable(data) {
             const tableBody = document.getElementById('table-body');
@@ -658,62 +683,6 @@
                 noResults.style.display = 'none';
             }
             
-            // Вспомогательная функция для обработки References (интегрирована в renderTable)
-            function processReferences(refs) {
-                if (!refs) return "<span class='no-ref'>No ref</span>";
-                
-                // Если это массив
-                if (Array.isArray(refs)) {
-                    return refs.map(ref => {
-                        if (ref && typeof ref === 'object' && ref.$oid) {
-                            return `ObjectID: ${ref.$oid}`;
-                        } else if (typeof ref === 'string') {
-                            // Убираем URL протоколы для отображения только текста
-                            let cleanedRef = ref
-                                .replace(/https?:\/\//g, '')
-                                .replace(/www\./g, '');
-                            
-                            // Обрезаем текст если он слишком длинный
-                            return cleanedRef.length > 30 ? cleanedRef.substring(0, 30) + '...' : cleanedRef;
-                        }
-                        return '';
-                    }).join(', ');
-                }
-                
-                // Если это строка
-                if (typeof refs === 'string') {
-                    // Пытаемся разделить по запятым, точкам с запятой или переносам строк
-                    const refArray = refs.split(/[,;\n]/).map(r => r.trim()).filter(r => r);
-                    
-                    if (refArray.length > 1) {
-                        return refArray.map(ref => {
-                            // Убираем URL протоколы
-                            let cleanedRef = ref
-                                .replace(/https?:\/\//g, '')
-                                .replace(/www\./g, '');
-                            
-                            const truncatedText = cleanedRef.length > 20 ? cleanedRef.substring(0, 20) + '...' : cleanedRef;
-                            return truncatedText;
-                        }).join(', ');
-                    } else {
-                        // Убираем URL протоколы
-                        let cleanedRef = refs
-                            .replace(/https?:\/\//g, '')
-                            .replace(/www\./g, '');
-                        
-                        const truncatedText = cleanedRef.length > 30 ? cleanedRef.substring(0, 30) + '...' : cleanedRef;
-                        return truncatedText;
-                    }
-                }
-                
-                // Если это объект (например, $oid)
-                if (typeof refs === 'object' && refs.$oid) {
-                    return `ObjectID: ${refs.$oid}`;
-                }
-                
-                return "<span class='no-ref'>No ref</span>";
-            }
-            
             // Добавляем строки для каждого инцидента
             data.forEach(incident => {
                 const row = document.createElement('tr');
@@ -731,11 +700,16 @@
                 const threatActor = cleanText(incident['Threat Actor'] || "Unknown");
                 const attackType = cleanText(incident['OT Attack Type'] || "Unknown");
                 const consequences = cleanText(incident['OT / ICS Physical Consequences'] || "Unknown");
-                const summary = cleanText(incident['Incident Summary'] || "No summary available");
+                let summary = cleanText(incident['Incident Summary'] || "No summary available");
                 
-                // Получаем и обрабатываем References
+                // Получаем References и добавляем их к summary
                 const references = incident['References'] || incident['Reference'] || incident['Source'] || "";
-                const referencesText = processReferences(references);
+                const referencesText = referencesToText(references);
+                
+                // Добавляем References к summary, если они есть
+                if (referencesText) {
+                    summary += `<br><br><strong>References:</strong> ${referencesText}`;
+                }
                 
                 // Определяем класс региона
                 const regionClass = getRegionClass(region);
@@ -753,7 +727,6 @@
                         <div class="summary-text">${summary}</div>
                         <a href="#" class="more-link" onclick="expandSummary(this); return false;">Read more</a>
                     </td>
-                    <td class="references-cell" title="${referencesText}">${referencesText}</td>
                 `;
                 
                 tableBody.appendChild(row);
@@ -774,10 +747,14 @@
                 const threatActor = cleanText(incident['Threat Actor'] || "");
                 const attackType = cleanText(incident['OT Attack Type'] || "");
                 const consequences = cleanText(incident['OT / ICS Physical Consequences'] || "");
-                const summary = cleanText(incident['Incident Summary'] || "");
+                let summary = cleanText(incident['Incident Summary'] || "");
                 
-                // Получаем References для поиска
-                const references = JSON.stringify(incident['References'] || incident['Reference'] || incident['Source'] || "").toLowerCase();
+                // Получаем References для поиска и добавляем их к summary для поиска
+                const references = incident['References'] || incident['Reference'] || incident['Source'] || "";
+                const referencesText = referencesToText(references);
+                if (referencesText) {
+                    summary += " References: " + referencesText;
+                }
                 
                 // Поиск по всем текстовым полям, включая References
                 const searchFields = [
@@ -787,8 +764,7 @@
                     threatActor,
                     attackType,
                     consequences,
-                    summary,
-                    references
+                    summary
                 ].join(' ').toLowerCase();
                 
                 const matchesSearch = searchInput === '' || searchFields.includes(searchInput);
@@ -1216,7 +1192,14 @@
                 const threatActor = cleanText(incident['Threat Actor'] || "");
                 const attackType = cleanText(incident['OT Attack Type'] || "");
                 const consequences = cleanText(incident['OT / ICS Physical Consequences'] || "");
-                const summary = cleanText(incident['Incident Summary'] || "");
+                let summary = cleanText(incident['Incident Summary'] || "");
+                
+                // Добавляем References к summary для поиска
+                const references = incident['References'] || incident['Reference'] || incident['Source'] || "";
+                const referencesText = referencesToText(references);
+                if (referencesText) {
+                    summary += " References: " + referencesText;
+                }
                 
                 const searchFields = [
                     victim,
