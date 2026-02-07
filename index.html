@@ -506,7 +506,7 @@
                 loadingText.textContent = 'Loading data from JSON file...';
                 
                 // Укажите правильный путь к вашему JSON файлу
-                const response = await fetch('/database/local.CyberIncidentsDB.json');
+                const response = await fetch('local.CyberIncidentsDB.json');
                 
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
