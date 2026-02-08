@@ -85,13 +85,13 @@
             position: relative;
             overflow-y: auto;
             border-bottom: 1px solid #eaeaea;
-            max-height: 600px; /* Фиксированная высота для 10 строк */
+            max-height: 600px;
         }
         
         table {
             width: 100%;
             border-collapse: collapse;
-            table-layout: fixed; /* Фиксированная ширина столбцов */
+            table-layout: fixed;
         }
         
         thead {
@@ -123,9 +123,9 @@
             vertical-align: top;
         }
         
-        /* Фиксированная высота строк для 10 строк */
         tr {
-            height: 48px; /* Фиксированная высота строки */
+            height: auto;
+            min-height: 48px;
         }
         
         tr:nth-child(even) {
@@ -185,13 +185,16 @@
             text-decoration: underline;
         }
         
+        /* ПОЛНЫЙ ВЫВОД ТЕКСТА В PHYSICAL CONSEQUENCES */
         .consequences {
             font-size: 0.85rem;
             color: #d32f2f;
             font-weight: 500;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            white-space: normal;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            max-width: 100%;
+            line-height: 1.4;
         }
         
         .footer {
@@ -218,7 +221,6 @@
             display: none;
         }
         
-        /* Стили для скроллбара */
         .table-container::-webkit-scrollbar {
             width: 8px;
             height: 8px;
@@ -245,7 +247,6 @@
             display: none;
         }
         
-        /* Dashboard Styles */
         .dashboard {
             padding: 25px 30px;
             background-color: #f8f9fa;
@@ -397,7 +398,6 @@
             box-shadow: 0 0 0 2px rgba(57, 73, 171, 0.1);
         }
         
-        /* Пагинация */
         .pagination {
             display: flex;
             justify-content: center;
@@ -456,41 +456,229 @@
             border-color: #3949ab;
         }
         
-        @media (max-width: 1200px) {
-            .table-container {
-                overflow-x: auto;
+        /* Ширина столбцов для десктопов */
+        th:nth-child(1), td:nth-child(1) { width: 100px; }
+        th:nth-child(2), td:nth-child(2) { width: 180px; }
+        th:nth-child(3), td:nth-child(3) { width: 100px; }
+        th:nth-child(4), td:nth-child(4) { width: 120px; }
+        th:nth-child(5), td:nth-child(5) { width: 150px; }
+        th:nth-child(6), td:nth-child(6) { width: 150px; }
+        th:nth-child(7), td:nth-child(7) { width: 200px; }
+        th:nth-child(8), td:nth-child(8) { width: auto; min-width: 300px; }
+        
+        /* ============ МОБИЛЬНАЯ АДАПТАЦИЯ ============ */
+        @media (max-width: 992px) {
+            body {
+                padding: 10px;
             }
             
-            table {
-                min-width: 1200px;
+            .container {
+                border-radius: 8px;
             }
             
+            header {
+                padding: 20px 15px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .subtitle {
+                font-size: 1rem;
+            }
+            
+            .dashboard {
+                padding: 20px 15px;
+            }
+            
+            .dashboard h2 {
+                font-size: 1.5rem;
+            }
+            
+            .chart-container {
+                padding: 15px;
+            }
+            
+            .chart-container h3 {
+                font-size: 1.1rem;
+            }
+            
+            .chart-wrapper {
+                height: 200px;
+            }
+            
+            .stat-value {
+                font-size: 2rem;
+            }
+        }
+        
+        @media (max-width: 768px) {
             .controls {
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 15px;
+                padding: 15px;
             }
             
             .search-filter {
                 width: 100%;
-                flex-wrap: wrap;
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .search-filter input, .search-filter select {
+                width: 100%;
+                font-size: 1rem;
+                padding: 10px 15px;
+            }
+            
+            .table-container {
+                overflow-x: auto;
+                max-height: 500px;
+            }
+            
+            table {
+                min-width: 1200px;
+                font-size: 0.85rem;
+            }
+            
+            th, td {
+                padding: 10px 8px;
+                font-size: 0.85rem;
+            }
+            
+            /* Увеличиваем ширину столбца Physical Consequences для мобильных */
+            td:nth-child(7), th:nth-child(7) {
+                min-width: 250px;
+            }
+            
+            .consequences {
+                font-size: 0.8rem;
+                line-height: 1.3;
+            }
+            
+            .summary-text {
+                font-size: 0.8rem;
+            }
+            
+            .dashboard-controls {
+                flex-direction: column;
+                gap: 15px;
+                align-items: stretch;
+            }
+            
+            .dashboard-btn, .time-range {
+                width: 100%;
+            }
+            
+            .time-range {
+                justify-content: space-between;
             }
             
             .pagination {
                 flex-direction: column;
                 gap: 15px;
+                padding: 15px;
+            }
+            
+            .page-controls {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            
+            .page-numbers {
+                flex-wrap: wrap;
+                justify-content: center;
             }
         }
         
-        /* Ширина столбцов */
-        th:nth-child(1), td:nth-child(1) { width: 100px; } /* Date */
-        th:nth-child(2), td:nth-child(2) { width: 180px; } /* Victim */
-        th:nth-child(3), td:nth-child(3) { width: 100px; } /* Region */
-        th:nth-child(4), td:nth-child(4) { width: 120px; } /* Industry */
-        th:nth-child(5), td:nth-child(5) { width: 150px; } /* Threat Actor */
-        th:nth-child(6), td:nth-child(6) { width: 150px; } /* OT Attack Type */
-        th:nth-child(7), td:nth-child(7) { width: 200px; } /* Physical Consequences */
-        th:nth-child(8), td:nth-child(8) { width: auto; min-width: 300px; } /* Incident Summary */
+        @media (max-width: 576px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .subtitle {
+                font-size: 0.9rem;
+            }
+            
+            .dashboard-grid {
+                gap: 15px;
+            }
+            
+            .chart-wrapper {
+                height: 180px;
+            }
+            
+            .chart-summary {
+                font-size: 0.8rem;
+            }
+            
+            .stat-card {
+                padding: 15px;
+            }
+            
+            .stat-value {
+                font-size: 1.8rem;
+            }
+            
+            .stat-label {
+                font-size: 0.8rem;
+            }
+            
+            .footer {
+                padding: 15px;
+                font-size: 0.8rem;
+            }
+            
+            table {
+                min-width: 1400px;
+            }
+            
+            /* Еще больше увеличиваем ширину для Physical Consequences на маленьких экранах */
+            td:nth-child(7), th:nth-child(7) {
+                min-width: 300px;
+            }
+            
+            .consequences {
+                font-size: 0.75rem;
+            }
+        }
+        
+        /* Адаптация для очень маленьких экранов (вертикальная ориентация) */
+        @media (max-width: 400px) {
+            .dashboard h2 {
+                font-size: 1.3rem;
+            }
+            
+            .chart-container h3 {
+                font-size: 1rem;
+            }
+            
+            .chart-wrapper {
+                height: 160px;
+            }
+            
+            .stats-cards {
+                gap: 10px;
+            }
+            
+            .pagination-btn {
+                padding: 6px 12px;
+                font-size: 0.85rem;
+            }
+            
+            .page-number {
+                padding: 4px 8px;
+                font-size: 0.85rem;
+            }
+        }
+        
+        /* Специальные стили для очень высоких строк в Physical Consequences */
+        .consequences-long {
+            min-height: 60px;
+        }
     </style>
 </head>
 <body>
@@ -785,6 +973,9 @@
                 // Определяем класс региона
                 const regionClass = getRegionClass(region);
                 
+                // Определяем, нужен ли специальный класс для длинного текста consequences
+                const consequencesClass = consequences.length > 100 ? "consequences-long" : "";
+                
                 // Создаем HTML для строки
                 row.innerHTML = `
                     <td>${date}</td>
@@ -793,7 +984,7 @@
                     <td><span class="industry-tag">${industry}</span></td>
                     <td>${threatActor}</td>
                     <td>${attackType}</td>
-                    <td class="consequences" title="${consequences}">${consequences}</td>
+                    <td class="consequences ${consequencesClass}" title="${consequences}">${consequences}</td>
                     <td>
                         <div class="summary-text">${summary}</div>
                         <a href="#" class="more-link" onclick="expandSummary(this); return false;">Read more</a>
